@@ -1,0 +1,19 @@
+CATEGORY,TYPE,SUBTYPE,PROMPT,DIALOGUE BEFORE,RESPONSE TEXT,DIALOGUE AFTER,SCRIPT NOTES,SCENE,CONTEXT,EMOTION
+Sample,CaseWork,,,,"Start with the last person who saw them. People edit the truth overnight.",,Stern,missing_person_open,investigation,stern
+Sample,CaseWork,,,,"That alibi has a hole in it. Ask where they were at dusk, not where they wish they had been.",,Puzzled,alibi_check,investigation,puzzled
+Sample,CaseWork,,,,"A witness who remembers every detail is usually remembering a story, not a night.",,Concerned,witness_interview,investigation,concerned
+Sample,CaseWork,,,,"Bring me the note. I trust paper more than a shaking voice.",,Neutral,evidence_handoff,investigation,neutral
+Sample,Threat,,,,"Stay behind me. If this goes wrong, you run. I will not ask twice.",,Stern,alley_standoff,combat,stern
+Sample,Threat,,,,"Drop it. Neither of us wants this street to get any louder.",,Angry,weapon_demand,combat,angry
+Sample,Threat,,,,"Keep your head down. Loud heroics get people buried.",,Irritated,cover_call,combat,irritated
+Sample,Greeting,,,,"You found the office. That is the easy part.",,Neutral,office_hello,greeting,neutral
+Sample,Greeting,,,,"Good. You are early. Most clients arrive after the trail is cold.",,Amused,early_client,greeting,amused
+Sample,SmallTalk,,,,"Coffee is terrible here. That is how you know the place is honest.",,Amused,counter_chat,casual,amused
+Sample,SmallTalk,,,,"I have heard worse stories. Not many, but a few.",,Somber,late_night_chat,casual,somber
+Sample,Personal,,,,"Some nights the work is the only thing that answers back. You learn to live with that.",,Somber,after_hours,emotional,somber
+Sample,Personal,,,,"You do not have to be fine. Just tell me what you actually saw.",,Concerned,client_shaken,emotional,concerned
+Sample,Choice,,,,"The clean ending and the right ending are rarely the same door.",,Stern,two_doors,moral_choice,stern
+Sample,Choice,,,,"If you walk away now, someone else pays for the quiet. Your call.",,Concerned,let_them_go,moral_choice,concerned
+Sample,Place,,,,"This block has more locked doors than open ones. That is a clue, not a mood.",,Neutral,locked_street,location,neutral
+Sample,Place,,,,"Docks always smell like excuses. Someone here saw something and decided not to.",,Irritated,dock_walk,location,irritated
+Sample,Surprise,,,,"Well. I did not have that name on the list. Say it again.",,Surprised,unexpected_name,investigation,surprised

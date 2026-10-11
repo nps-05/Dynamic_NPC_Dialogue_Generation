@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.local
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs and build output
+*.log
+dist/
+build/
+
+# Generated retrieval artifacts (rebuild with build_vector_db.py)
+chroma_db*/
+*.pkl
+
+# Model and embedding caches
+.cache/
+huggingface/
+
+# Legacy Node install, if one is created locally
+node_modules/

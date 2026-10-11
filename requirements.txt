@@ -1,0 +1,28 @@
+# Core Web Framework
+flask==3.0.3
+flask-cors==5.0.0
+python-dotenv==1.0.1
+
+# Data Processing (using pre-built wheel)
+pandas==2.1.4
+
+# AI/ML - HuggingFace & Transformers
+transformers==4.46.3
+tokenizers==0.20.3
+
+# PyTorch (CPU version - lighter and faster to install)
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Vector Database & Embeddings
+chromadb==0.5.20
+sentence-transformers==3.3.1
+
+# Additional dependencies for ChromaDB
+pydantic==2.10.2
+pydantic-settings==2.6.1
+
+# Progress bars for vector DB building
+tqdm==4.66.1

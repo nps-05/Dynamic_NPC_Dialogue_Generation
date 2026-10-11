@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Valentine - Dialogue Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1>🕵️ Nick Valentine</h1>
+        <p class="subtitle">Diamond City Detective Agency</p>
+        <p class="agent-info" id="agentInfo">Agent: Loading...</p>
+      </div>
+      <div class="header-actions">
+        <select id="agentSelect" class="select agent-select">
+          <option value="">Loading agents...</option>
+        </select>
+        <button id="resetBtn" class="btn btn-secondary">Reset Conversation</button>
+        <button id="exportBtn" class="btn btn-secondary">Export</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Conversation Display -->
+      <div class="conversation-panel">
+        <div id="conversationDisplay" class="conversation-display">
+          <div class="message system-message">
+            <div class="message-content">
+              <p><strong>System:</strong> Nick Valentine is ready to talk. What do you want to say?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Panel -->
+      <div class="input-panel">
+        <div class="input-controls">
+          <div class="control-group">
+            <label for="contextSelect">Context:</label>
+            <select id="contextSelect" class="select">
+              <option value="casual">Casual</option>
+              <option value="investigation">Investigation</option>
+              <option value="combat">Combat</option>
+              <option value="emotional">Emotional</option>
+              <option value="moral_choice">Moral Choice</option>
+              <option value="location">Location Comment</option>
+              <option value="greeting">Greeting</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="emotionSelect">Emotion:</label>
+            <select id="emotionSelect" class="select">
+              <option value="">Auto</option>
+              <option value="neutral">Neutral</option>
+              <option value="amused">Amused</option>
+              <option value="stern">Stern</option>
+              <option value="concerned">Concerned</option>
+              <option value="irritated">Irritated</option>
+              <option value="somber">Somber</option>
+              <option value="puzzled">Puzzled</option>
+              <option value="angry">Angry</option>
+              <option value="surprised">Surprised</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label>
+              <input type="checkbox" id="examplesCheck" checked>
+              Include examples (closer to canon lines)
+            </label>
+          </div>
+        </div>
+
+        <div class="input-area">
+          <textarea 
+            id="userInput" 
+            class="input-textarea" 
+            placeholder="What do you want to say to Nick?"
+            rows="3"
+          ></textarea>
+          <button id="generateBtn" class="btn btn-primary">
+            <span id="btnText">Generate Response</span>
+            <span id="btnLoader" class="loader" style="display: none;"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="stats-panel">
+        <div class="stat">
+          <span class="stat-label">Messages:</span>
+          <span id="messageCount" class="stat-value">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Est. Cost:</span>
+          <span id="costEstimate" class="stat-value">$0.00</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Status:</span>
+          <span id="status" class="stat-value status-ready">Ready</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Info Panel -->
+    <aside class="info-panel">
+      <h3>About Nick Valentine</h3>
+      <p>
+        Nick is a synth detective in Diamond City. He's world-weary, cynical, 
+        but ultimately cares about justice and helping people. He speaks with 
+        a noir detective tone and occasionally references pre-war culture.
+      </p>
+      
+      <h3>Tips</h3>
+      <ul>
+        <li>Try different contexts for varied responses</li>
+        <li>Keep conversations natural and in-character</li>
+        <li>Use "Investigation" context for detective work</li>
+        <li>Experiment with emotions for different tones</li>
+      </ul>
+
+      <h3>Qwen Model (100% Free)</h3>
+      <p>
+        This uses Qwen 2.5 1.5B Instruct running locally on your machine.
+        Completely free with no API costs or rate limits!
+      </p>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
