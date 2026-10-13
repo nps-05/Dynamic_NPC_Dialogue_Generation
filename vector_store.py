@@ -1,5 +1,5 @@
 """
-Vector Store using existing ChromaDB for Nick Valentine dialogue
+ChromaDB search for a character dialogue index
 """
 import chromadb
 from typing import List, Dict, Optional
@@ -123,26 +123,26 @@ class DialogueVectorStore:
         return "\n".join(examples)
 
 
-# Global instance
-_vector_store = None
+_stores = {}
+
 
 def default_chroma_path() -> str:
-    """Path the web app expects. Rebuild into this folder, or change this helper."""
+    """Legacy single-character path. Prefer discover_characters()."""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chroma_db_nick_valentine')
 
 
+def open_vector_store(db_path: str) -> DialogueVectorStore:
+    """Open a Chroma directory, reusing the client if that path is already open."""
+    key = os.path.abspath(db_path)
+    store = _stores.get(key)
+    if store is None:
+        store = DialogueVectorStore(db_path)
+        _stores[key] = store
+    return store
+
+
 def get_vector_store(db_path: str = None) -> DialogueVectorStore:
-    """Get or create global vector store instance.
-
-    A later call with a different path replaces the cached client. Callers used
-    to pass the CSV path after startup and were silently ignored.
-    """
-    global _vector_store
-
+    """Get a vector store. Each database path keeps its own client."""
     if db_path is None:
         db_path = default_chroma_path()
-
-    if _vector_store is None or os.path.abspath(_vector_store.db_path) != os.path.abspath(db_path):
-        _vector_store = DialogueVectorStore(db_path)
-
-    return _vector_store
+    return open_vector_store(db_path)

@@ -12,7 +12,7 @@ The vector database is used for semantic search to find relevant dialogue exampl
 python build_vector_db.py --csv data/nick_valentine_dialogue.csv
 ```
 
-The app always opens `chroma_db_nick_valentine`. The command above uses that path when the CSV is named `nick_valentine_dialogue.csv`. If you pass a different `--db-path`, also change `default_chroma_path()` in `vector_store.py`.
+The dropdown lists a character only when this command's default database exists next to the CSV. `data/ada_dialogue.csv` becomes `chroma_db_ada/`. Run the command from the project root, and do not pass a different `--db-path` unless you also want to change the discovery code.
 
 This will:
 - Read the CSV file

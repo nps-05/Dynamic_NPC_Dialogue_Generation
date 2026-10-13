@@ -80,6 +80,23 @@ body {
 .header-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.select:focus-visible,
+.btn:focus-visible,
+.input-textarea:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 /* Main Content */

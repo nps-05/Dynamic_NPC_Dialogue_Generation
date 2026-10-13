@@ -167,8 +167,8 @@ def main():
     
     # Determine collection name from CSV filename if not provided
     if args.collection is None:
-        csv_basename = os.path.basename(args.csv)
-        collection_name = os.path.splitext(csv_basename)[0].replace('_dialogue', '').replace('_', '_')
+        from characters import character_id_from_filename
+        collection_name = character_id_from_filename(args.csv)
     else:
         collection_name = args.collection
     

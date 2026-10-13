@@ -1,6 +1,6 @@
 """
-Flask Server for Nick Valentine Dialogue Generator
-Multi-agent dialogue system with seamless agent switching
+Flask server for dynamic NPC dialogue generation
+One local model, characters discovered from CSV and ChromaDB pairs
 """
 
 from flask import Flask, request, jsonify, send_from_directory
@@ -9,30 +9,17 @@ from dotenv import load_dotenv
 import os
 
 from agents.agent_manager import AgentManager
+from characters import discover_characters, public_character
 from model_defaults import DEFAULT_HF_MODEL
 
 # Load environment variables
 load_dotenv()
-
-# Try to import vector store (optional dependency)
-try:
-    from vector_store import default_chroma_path, get_vector_store
-    VECTOR_STORE_AVAILABLE = True
-except ImportError:
-    VECTOR_STORE_AVAILABLE = False
-    print("Warning: Vector store not available (chromadb not installed)")
-
-    def default_chroma_path():
-        return os.path.join(os.path.dirname(__file__), 'chroma_db_nick_valentine')
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 CORS(app)
 
 # Initialize Agent Manager
 agent_manager = AgentManager()
-
-# Initialize vector store (optional)
-vector_store = None
 _agents_initialized = False
 
 # Initialize agents
@@ -45,24 +32,14 @@ def initialize_agents():
         print("Agents already initialized, skipping...")
         return
     
-    # Check if we're in the Flask reloader process
-    # The reloader runs code twice - skip initialization in the parent process
-    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+    # The debug reloader imports this file twice. Only the child should load the model.
+    debug = os.getenv('FLASK_DEBUG', '0') == '1'
+    if debug and os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
         print("Waiting for Flask reloader...")
         return
     
     try:
         csv_path = os.path.join(os.path.dirname(__file__), 'data', 'nick_valentine_dialogue.csv')
-        
-        # Initialize Vector Store (if available)
-        global vector_store
-        if VECTOR_STORE_AVAILABLE:
-            try:
-                print("Loading ChromaDB...")
-                vector_store = get_vector_store(default_chroma_path())
-                print("ChromaDB ready!")
-            except Exception as e:
-                print(f"Warning: ChromaDB failed: {e}")
         
         # HuggingFace agent. Model id comes from HF_MODEL or model_defaults.DEFAULT_HF_MODEL.
         # HF_TOKEN is optional - Qwen models don't require authentication
@@ -84,6 +61,12 @@ def initialize_agents():
             init_result = hf_agent.initialize()
             if init_result:
                 agent_manager.register_agent('huggingface', hf_agent)
+                characters = discover_characters()
+                if characters:
+                    hf_agent.use_character(characters[0])
+                    print(f"Active character: {characters[0]['name']}")
+                else:
+                    print("No character with both a CSV and a vector database. Build one to enable chat.")
                 print(f"HuggingFace agent ({model_name}) initialized successfully!")
                 _agents_initialized = True
             else:
@@ -205,6 +188,44 @@ def cost_estimate():
     })
 
 
+@app.route('/api/characters', methods=['GET'])
+def list_characters():
+    """Characters that currently have both a CSV and a Chroma database."""
+    characters = discover_characters()
+    agent = agent_manager.get_active_agent()
+    active = getattr(agent, 'character_id', None) if agent else None
+    return jsonify({
+        'characters': [public_character(character) for character in characters],
+        'active': active,
+    })
+
+
+@app.route('/api/characters/switch', methods=['POST'])
+def switch_character():
+    """Switch the active agent to another discovered character."""
+    data = request.json or {}
+    character_id = data.get('characterId')
+    if not character_id:
+        return jsonify({'error': 'characterId is required'}), 400
+
+    match = next((item for item in discover_characters() if item['id'] == character_id), None)
+    if not match:
+        return jsonify({
+            'error': 'Character not found. The CSV and vector database must both exist.',
+        }), 404
+
+    agent = agent_manager.get_active_agent()
+    if not agent or not hasattr(agent, 'use_character'):
+        return jsonify({'error': 'No dialogue agent is ready'}), 503
+
+    agent.use_character(match)
+    return jsonify({
+        'success': True,
+        'character': public_character(match),
+        'message': f"Switched to {match['name']}. Conversation reset.",
+    })
+
+
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint"""
@@ -216,33 +237,21 @@ def health():
 
 
 if __name__ == '__main__':
-    # Only initialize and print in the main process (not reloader parent)
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        print("\nNick Valentine Dialogue Generator (Python/Flask)")
+    debug = os.getenv('FLASK_DEBUG', '0') == '1'
+    host = os.getenv('HOST', '127.0.0.1')
+    port = int(os.getenv('PORT', 3000))
+    # Only the reloader child should load the model. A normal run has no child.
+    if not debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        print("\nDynamic NPC Dialogue (Python/Flask)")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        
-        # Initialize agents
         initialize_agents()
-        
         if not agent_manager.agents:
-            print("Error: No agents initialized! Please check the errors above.")
-            print("Warning: The Flask server will still start, but dialogue generation will not work.")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("Error: No agents initialized. The server will start, but generation will fail.")
         else:
             print(f"Active agent: {agent_manager.active_agent}")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        
-        port = int(os.getenv('PORT', 3000))
-        print(f"Server running at http://localhost:{port}")
-        print(f"API endpoints:")
-        print(f"   POST   /api/generate        - Generate dialogue")
-        print(f"   GET    /api/agents          - List all agents")
-        print(f"   POST   /api/agents/switch   - Switch active agent")
-        print(f"   GET    /api/agents/active   - Get active agent info")
-        print(f"   GET    /api/history         - Get conversation history")
-        print(f"   POST   /api/reset           - Reset conversation")
-        print(f"   GET    /api/export          - Export conversation")
+        print(f"Server running at http://{host}:{port}")
+        print("   GET    /api/characters")
+        print("   POST   /api/characters/switch")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-    
-    port = int(os.getenv('PORT', 3000))
-    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=True)
+
+    app.run(host=host, port=port, debug=debug, use_reloader=debug)

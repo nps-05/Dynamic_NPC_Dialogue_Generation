@@ -1,6 +1,6 @@
 """
 Model Comparison Tool
-Compares SLM (Qwen 2.5 3B) vs LLM (Gemini) for character mimicry
+Compares the local instruct model with Gemini for character mimicry
 """
 import os
 import json

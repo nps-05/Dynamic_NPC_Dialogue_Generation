@@ -1,4 +1,4 @@
-// Nick Valentine Dialogue Generator - Frontend
+// Dynamic NPC Dialogue - frontend
 
 const elements = {
   conversationDisplay: document.getElementById('conversationDisplay'),
@@ -6,6 +6,11 @@ const elements = {
   generateBtn: document.getElementById('generateBtn'),
   resetBtn: document.getElementById('resetBtn'),
   exportBtn: document.getElementById('exportBtn'),
+  characterSelect: document.getElementById('characterSelect'),
+  pageTitle: document.getElementById('pageTitle'),
+  pageSubtitle: document.getElementById('pageSubtitle'),
+  aboutTitle: document.getElementById('aboutTitle'),
+  aboutText: document.getElementById('aboutText'),
   agentSelect: document.getElementById('agentSelect'),
   agentInfo: document.getElementById('agentInfo'),
   contextSelect: document.getElementById('contextSelect'),
@@ -20,12 +25,14 @@ const elements = {
 
 let messageCounter = 0;
 let totalCost = 0;
+let speakerName = 'Character';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   elements.generateBtn.addEventListener('click', generateDialogue);
   elements.resetBtn.addEventListener('click', resetConversation);
   elements.exportBtn.addEventListener('click', exportConversation);
+  elements.characterSelect.addEventListener('change', switchCharacter);
   elements.agentSelect.addEventListener('change', switchAgent);
   
   // Allow Enter to submit (with Shift+Enter for new line)
@@ -36,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Load available agents
+  loadCharacters();
   loadAgents();
   
   // Focus on input
@@ -119,7 +126,7 @@ function addMessage(text, type, meta = {}) {
   if (type === 'player') {
     textP.innerHTML = `<strong>You:</strong> ${escapeHtml(text)}`;
   } else if (type === 'nick') {
-    textP.innerHTML = `<strong>Nick:</strong> ${escapeHtml(text)}`;
+    textP.innerHTML = `<strong>${escapeHtml(speakerName)}:</strong> ${escapeHtml(text)}`;
   } else {
     textP.innerHTML = `<strong>System:</strong> ${escapeHtml(text)}`;
   }
@@ -165,7 +172,7 @@ async function resetConversation() {
     
     // Clear display
     elements.conversationDisplay.innerHTML = '';
-    addMessage('Nick Valentine is ready to talk. What do you want to say?', 'system');
+    addMessage(`${speakerName} is ready to talk. What do you want to say?`, 'system');
     
     // Reset stats
     messageCounter = 0;
@@ -193,7 +200,7 @@ async function exportConversation() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nick-conversation-${Date.now()}.json`;
+    a.download = `${speakerName.toLowerCase().replace(/\s+/g, '-')}-conversation-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -266,6 +273,81 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+function applyCharacter(character) {
+  speakerName = character?.name || 'Character';
+  elements.pageTitle.textContent = speakerName;
+  elements.pageSubtitle.textContent = 'Local character dialogue';
+  elements.aboutTitle.textContent = speakerName;
+  elements.aboutText.textContent = character
+    ? `${speakerName} is loaded from a local dialogue file and vector database.`
+    : 'A character appears here only after you add a dialogue CSV and build its vector database.';
+  elements.userInput.placeholder = `What do you want to say to ${speakerName}?`;
+  document.title = `${speakerName} - Dynamic NPC Dialogue`;
+}
+
+async function loadCharacters() {
+  try {
+    const response = await fetch('/api/characters');
+    if (!response.ok) throw new Error('Failed to load characters');
+    const data = await response.json();
+    const characters = data.characters || [];
+
+    elements.characterSelect.innerHTML = '';
+    if (characters.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'No characters yet';
+      elements.characterSelect.appendChild(option);
+      elements.characterSelect.disabled = true;
+      applyCharacter(null);
+      return;
+    }
+
+    elements.characterSelect.disabled = false;
+    characters.forEach((character) => {
+      const option = document.createElement('option');
+      option.value = character.id;
+      option.textContent = character.name;
+      if (character.id === data.active) option.selected = true;
+      elements.characterSelect.appendChild(option);
+    });
+    const active = characters.find((character) => character.id === data.active) || characters[0];
+    applyCharacter(active);
+  } catch (error) {
+    console.error('Error loading characters:', error);
+    elements.characterSelect.innerHTML = '';
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Could not load characters';
+    elements.characterSelect.appendChild(option);
+  }
+}
+
+async function switchCharacter() {
+  const characterId = elements.characterSelect.value;
+  if (!characterId) return;
+
+  try {
+    const response = await fetch('/api/characters/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ characterId }),
+    });
+    if (!response.ok) throw new Error('Failed to switch character');
+    const data = await response.json();
+    applyCharacter(data.character);
+    elements.conversationDisplay.innerHTML = '';
+    addMessage(`Now talking to ${speakerName}. Starting a fresh conversation.`, 'system');
+    messageCounter = 0;
+    updateStats();
+    showNotification(data.message, 'success');
+  } catch (error) {
+    console.error('Error switching character:', error);
+    showNotification('Failed to switch character', 'error');
+    loadCharacters();
+  }
 }
 
 // Load available agents

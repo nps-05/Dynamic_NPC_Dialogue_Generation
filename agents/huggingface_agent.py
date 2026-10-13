@@ -30,7 +30,10 @@ class HuggingFaceAgent(BaseDialogueAgent):
         self.conversation_history = []
         self.max_history = 5
         self.vector_store = None
-        self.dialogue_processor = DialogueProcessor(csv_path)  # Add this!
+        self.dialogue_processor = DialogueProcessor(csv_path)
+        self.character_id = None
+        self.character_name = None
+        self.personality = None
     
     def initialize(self) -> bool:
         """Initialize the HuggingFace model"""
@@ -95,16 +98,6 @@ class HuggingFaceAgent(BaseDialogueAgent):
             )
             
             print(f"HuggingFace agent initialized: {self.model_name}")
-            
-            # Try to load vector store
-            try:
-                from vector_store import default_chroma_path, get_vector_store
-                self.vector_store = get_vector_store(default_chroma_path())
-                print(f"Vector store loaded for HuggingFace agent")
-            except Exception as e:
-                print(f"Warning: Vector store not available: {e}")
-                self.vector_store = None
-            
             return True
             
         except Exception as e:
@@ -112,6 +105,18 @@ class HuggingFaceAgent(BaseDialogueAgent):
             import traceback
             traceback.print_exc()
             return False
+
+    def use_character(self, character: Dict) -> None:
+        """Point retrieval and the prompt at one discovered character."""
+        from characters import personality_for
+        from vector_store import open_vector_store
+
+        self.character_id = character["id"]
+        self.character_name = character["name"]
+        self.personality = personality_for(character)
+        self.dialogue_processor = DialogueProcessor(character["csv_path"])
+        self.vector_store = open_vector_store(character["db_path"])
+        self.reset_conversation()
     
     def build_prompt(
         self,
@@ -122,22 +127,11 @@ class HuggingFaceAgent(BaseDialogueAgent):
     ) -> str:
         """Build context-aware prompt with personality and conversation history"""
         
-        # Detailed personality instructions for Qwen
-        personality = """You are Nick Valentine, a synth private detective from Fallout 4. You're a 1940s noir detective with a dry wit and world-weary attitude.
-
-SPEAKING STYLE:
-- Use short, direct sentences like a classic detective
-- Dry humor and occasional sarcasm
-- Address people as 'pal', 'friend', 'kid'
-- Never mention you're an AI or break character
-- Keep responses brief (1-2 sentences)
-- Examples of how you speak:
-  * "Ask them again tomorrow. People edit the truth overnight."
-  * "Keep your voice down."
-  * "That story has a hole in it."
-  * "I have heard worse. Not many."
-  * "You did the asking. I will do the walking."
-"""
+        personality = self.personality or (
+            "You are a character in a conversation. Stay in character. "
+            "Keep responses to 1-2 sentences."
+        )
+        speaker = self.character_name or "Character"
 
         # Context-specific behavior
         context_map = {
@@ -176,7 +170,7 @@ SPEAKING STYLE:
             history_text = "\n\nRECENT CONVERSATION:\n"
             for exchange in recent_history:
                 history_text += f"User: {exchange['user']}\n"
-                history_text += f"Nick: {exchange['agent']}\n"
+                history_text += f"{speaker}: {exchange['agent']}\n"
         
         # Add examples if requested and available
         examples_text = ""
@@ -229,6 +223,13 @@ SPEAKING STYLE:
         
         if not self.model or not self.pipeline:
             raise Exception("Agent not initialized. Call initialize() first.")
+        if not self.character_id:
+            return {
+                'response': "No character is loaded. Add a dialogue CSV and build its vector database.",
+                'error': 'no_character',
+                'agent': self.name,
+                'model': self.model_name,
+            }
         
         try:
             # Build prompt
@@ -281,7 +282,7 @@ SPEAKING STYLE:
                     nick_response = nick_response.split(pattern)[0].strip()
             
             # Stop at dialogue markers
-            for marker in ['User:', 'user:', 'Nick:', 'nick:']:
+            for marker in ['User:', 'user:', 'Nick:', 'nick:', f'{self.character_name}:' if self.character_name else 'Character:']:
                 if marker in nick_response:
                     nick_response = nick_response.split(marker)[0].strip()
             

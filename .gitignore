@@ -34,6 +34,10 @@ build/
 chroma_db*/
 *.pkl
 
+# Dialogue you add locally. The tracked sample is the only CSV that belongs in git.
+data/*.csv
+!data/nick_valentine_dialogue.csv
+
 # Model and embedding caches
 .cache/
 huggingface/

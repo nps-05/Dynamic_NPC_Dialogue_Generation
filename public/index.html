@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nick Valentine - Dialogue Generator</title>
+  <title>Dynamic NPC Dialogue</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,14 +11,21 @@
     <!-- Header -->
     <header class="header">
       <div class="header-content">
-        <h1>🕵️ Nick Valentine</h1>
-        <p class="subtitle">Diamond City Detective Agency</p>
+        <h1 id="pageTitle">Dialogue</h1>
+        <p class="subtitle" id="pageSubtitle">Local character dialogue</p>
         <p class="agent-info" id="agentInfo">Agent: Loading...</p>
       </div>
       <div class="header-actions">
-        <select id="agentSelect" class="select agent-select">
-          <option value="">Loading agents...</option>
-        </select>
+        <label class="select-label" for="characterSelect">Character
+          <select id="characterSelect" class="select">
+            <option value="">Loading characters...</option>
+          </select>
+        </label>
+        <label class="select-label" for="agentSelect">Model
+          <select id="agentSelect" class="select agent-select">
+            <option value="">Loading models...</option>
+          </select>
+        </label>
         <button id="resetBtn" class="btn btn-secondary">Reset Conversation</button>
         <button id="exportBtn" class="btn btn-secondary">Export</button>
       </div>
@@ -31,7 +38,7 @@
         <div id="conversationDisplay" class="conversation-display">
           <div class="message system-message">
             <div class="message-content">
-              <p><strong>System:</strong> Nick Valentine is ready to talk. What do you want to say?</p>
+              <p><strong>System:</strong> Choose a character, then say something.</p>
             </div>
           </div>
         </div>
@@ -81,7 +88,7 @@
           <textarea 
             id="userInput" 
             class="input-textarea" 
-            placeholder="What do you want to say to Nick?"
+            placeholder="What do you want to say?"
             rows="3"
           ></textarea>
           <button id="generateBtn" class="btn btn-primary">
@@ -110,11 +117,10 @@
 
     <!-- Info Panel -->
     <aside class="info-panel">
-      <h3>About Nick Valentine</h3>
-      <p>
-        Nick is a synth detective in Diamond City. He's world-weary, cynical, 
-        but ultimately cares about justice and helping people. He speaks with 
-        a noir detective tone and occasionally references pre-war culture.
+      <h3 id="aboutTitle">Characters</h3>
+      <p id="aboutText">
+        A character appears here only after you add a dialogue CSV and build its vector database.
+        The sample file is original placeholder text. Lines from a commercial game stay on your machine.
       </p>
       
       <h3>Tips</h3>

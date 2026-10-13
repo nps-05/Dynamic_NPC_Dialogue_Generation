@@ -1,6 +1,6 @@
 """
 Dialogue Data Processor
-Parses Nick Valentine's dialogue CSV and provides utilities for context retrieval
+Parses a character dialogue CSV and labels rows for retrieval
 """
 
 import pandas as pd
